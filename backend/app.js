@@ -10,6 +10,9 @@ app.use(express.json());
 app.use('/api/reports', require('./routes/report.routes'));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/services', require('./routes/service.routes'));
+app.use('/api/advance', require('./routes/advance.routes'));
+app.use('/api/udhar', require('./routes/udhar.routes'));
+app.use('/api/expense', require('./routes/expense.routes'));
 
 
 
