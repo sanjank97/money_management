@@ -31,3 +31,22 @@ exports.insertServiceBalances = async (reportId, services) => {
   }
 };
 
+
+exports.findReportByUserAndDate = async (userId, date) => {
+  const [rows] = await db.query(
+    'SELECT * FROM daily_reports WHERE report_date = ?',
+    [date]
+  );
+  return rows.length > 0 ? rows[0] : null;
+};
+
+exports.getServiceBalances = async (reportId) => {
+  const [rows] = await db.query(
+    `SELECT sb.service_id, s.name AS service_name, sb.amount
+     FROM service_balances sb
+     JOIN services s ON sb.service_id = s.id
+     WHERE sb.report_id = ?`,
+    [reportId]
+  );
+  return rows;
+};

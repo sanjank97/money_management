@@ -39,3 +39,22 @@ exports.saveExpenseEntries = async (req, res) => {
 
 
 
+exports.getAdvanceEntries = async (req, res) => {
+  const { reportId } = req.params;
+
+  if (!reportId) {
+    return res.status(400).json({ error: 'Missing report ID' });
+  }
+
+  try {
+    const entries = await Advance.getAdvanceEntriesByReportId(reportId);
+
+    return res.status(200).json({
+      report_id: reportId,
+      entries: entries || [],
+    });
+  } catch (error) {
+    console.error('Error fetching advance entries:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

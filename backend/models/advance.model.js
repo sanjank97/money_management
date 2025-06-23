@@ -72,3 +72,12 @@ exports.updateTotalSum = async (reportId) => {
 exports.deleteAdvanceEntries = async (reportId) => {
   await db.query('DELETE FROM advance_entries WHERE report_id = ?', [reportId]);
 };
+
+
+exports.getAdvanceEntriesByReportId = async (reportId) => {
+  const [rows] = await db.query(
+    'SELECT id, name, amount FROM advance_entries WHERE report_id = ?',
+    [reportId]
+  );
+  return rows;
+};

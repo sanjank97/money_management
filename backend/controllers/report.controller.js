@@ -42,3 +42,35 @@ exports.createDailyReport = async (req, res) => {
   }
 };
 
+
+exports.getDailyReport = async (req, res) => {
+  const userId = req.user.id; // From verifyToken middleware
+  const reportDate = req.params.date;
+
+  try {
+    // Step 1: Fetch the main report
+    const report = await Report.findReportByUserAndDate(userId, reportDate);
+    if (!report) {
+      return res.status(404).json({ error: 'Report not found for this date' });
+    }
+
+    // Step 2: Fetch all service balances for this report
+    const services = await Report.getServiceBalances(report.id);
+
+    // Step 3: Return full data
+    return res.status(200).json({
+      report_id: report.id,
+      report_date: report.report_date,
+      advance: report.advance,
+      udhar: report.udhar,
+      expense: report.expense,
+      total_service: report.total_service,
+      total_sum: report.total_sum,
+      services: services
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Error retrieving daily report' });
+  }
+};
