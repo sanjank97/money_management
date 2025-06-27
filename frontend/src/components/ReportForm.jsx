@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-export default function ReportForm({ reportDate, setReportId }) {
+export default function ReportForm({ reportDate, setReportId, refreshKey}) {
   const [services, setServices] = useState([]);
   const [serviceAmounts, setServiceAmounts] = useState({});
   const [totals, setTotals] = useState({
@@ -50,6 +50,8 @@ export default function ReportForm({ reportDate, setReportId }) {
           }
         );
 
+
+        console.log("response",res );
         // Fill totals
         setTotals({
           advance: parseFloat(res.data.advance),
@@ -87,7 +89,7 @@ export default function ReportForm({ reportDate, setReportId }) {
     };
 
     fetchReportByDate();
-  }, [reportDate, services]);
+  }, [reportDate, services, refreshKey]);
 
   const handleChangeAmount = (id, value) => {
     setServiceAmounts({
@@ -99,8 +101,9 @@ export default function ReportForm({ reportDate, setReportId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
+    
 
-    try {
+   try {
       await axios.post(
         "http://localhost:5000/api/reports",
         {

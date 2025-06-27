@@ -71,3 +71,11 @@ exports.updateTotalSum = async (reportId) => {
 exports.deleteExpenseEntries = async (reportId) => {
   await db.query('DELETE FROM expense_entries WHERE report_id = ?', [reportId]);
 };
+
+exports.getExpenseEntriesByReportId = async (reportId) => {
+  const [rows] = await db.query(
+    'SELECT id, name, amount FROM expense_entries WHERE report_id = ?',
+    [reportId]
+  );
+  return rows;
+};

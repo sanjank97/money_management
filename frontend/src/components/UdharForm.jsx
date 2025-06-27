@@ -1,10 +1,47 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
-export default function UdharForm({ reportDate }) {
-  const [entries, setEntries] = useState([{ name: "", amount: "" }]);
+export default function UdharForm({ reportDate, reportId, triggerRefresh  }) {
+ const [entries, setEntries] = useState([{ name: "", amount: "" }]);
   const [message, setMessage] = useState("");
+
+  const token = localStorage.getItem("token");
+
+
+  console.log("rreportId", reportId);
+  // 🔄 Fetch existing advance entries when reportId is available
+  useEffect(() => {
+     if (!reportId) {
+    setEntries([{ name: "", amount: "" }]);
+    setMessage("ℹ️ No advance data available for this date.");
+    return;
+  }
+    const fetchAdvanceEntries = async () => {
+      if (!reportId) return;
+
+      try {
+        const res = await axios.get(`http://localhost:5000/api/udhar/${reportId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.data.entries?.length > 0) {
+          const formatted = res.data.entries.map((e) => ({
+            name: e.name,
+            amount: parseFloat(e.amount),
+          }));
+          setEntries(formatted);
+          setMessage("ℹ️ Loaded previous udhar entries.");
+        }
+      } catch (err) {
+        console.error("Failed to load udhar entries:", err);
+        setMessage("❌ Failed to load previous data");
+      }
+    };
+
+    fetchAdvanceEntries();
+  }, [reportId]);
 
   const handleChange = (index, field, value) => {
     const updated = [...entries];
@@ -39,6 +76,7 @@ export default function UdharForm({ reportDate }) {
       });
 
       setMessage("✅ Udhar entries submitted successfully");
+      triggerRefresh();
     } catch (err) {
       console.error(err);
       setMessage("❌ Failed to submit udhar entries");
@@ -57,7 +95,7 @@ export default function UdharForm({ reportDate }) {
               className="flex-1 border px-4 py-2 rounded-md"
               value={entry.name}
               onChange={(e) => handleChange(index, "name", e.target.value)}
-              required
+              
             />
             <input
               type="number"
@@ -65,7 +103,7 @@ export default function UdharForm({ reportDate }) {
               className="w-40 border px-4 py-2 rounded-md"
               value={entry.amount}
               onChange={(e) => handleChange(index, "amount", e.target.value)}
-              required
+              
             />
             {entries.length > 1 && (
               <button

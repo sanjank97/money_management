@@ -1,46 +1,76 @@
 const Report = require('../models/report.model');
-
-exports.createDailyReport = async (req, res) => {
-  const userId = req.user.id; // Only 1 user in your system
+exports.createOrUpdateDailyReport = async (req, res) => {
+  const userId = req.user.id;
+  const userRole = req.user.role; // assuming you store this in token
   const { report_date, services, advance, udhar, expense } = req.body;
 
   try {
-    // Step 1: Prevent future date
     const today = new Date().toISOString().split('T')[0];
+
+    // 🛑 Prevent future date for everyone
     if (report_date > today) {
       return res.status(400).json({ error: 'Cannot create report for future date' });
     }
 
-    // Step 2: Check if report already exists
-    const existing = await Report.findReportByUserAndDate(userId, report_date);
-    if (existing) {
-      return res.status(400).json({ error: 'Report already exists for this date' });
+    // 🛑 Prevent backdated reports if not admin
+    if (userRole !== 'admin' && report_date !== today) {
+      return res.status(403).json({ error: 'You are not allowed to create or update backdated reports' });
     }
 
-    // Step 3: Calculate totals
+    // ✅ Calculate totals
     const totalService = services.reduce((sum, s) => sum + Number(s.amount || 0), 0);
     const totalSum = totalService + udhar + expense - advance;
 
-    // Step 4: Insert daily report
-    const reportId = await Report.createReport(
-      userId, report_date, advance, udhar, expense, totalService, totalSum
-    );
+    // ✅ Check if report exists
+    const existing = await Report.findReportByUserAndDate(userId, report_date);
 
-    // Step 5: Insert service balances
-    await Report.insertServiceBalances(reportId, services);
+    let reportId;
 
-    return res.status(201).json({
-      message: 'Daily report submitted successfully',
+    if (existing) {
+      // ✅ Update report
+      reportId = existing.id;
+
+      await Report.updateReport(
+        reportId,
+        advance,
+        udhar,
+        expense,
+        totalService,
+        totalSum
+      );
+
+      await Report.deleteServiceBalances(reportId);
+      await Report.insertServiceBalances(reportId, services);
+
+    } else {
+      // ✅ Create new report
+      reportId = await Report.createReport(
+        userId,
+        report_date,
+        advance,
+        udhar,
+        expense,
+        totalService,
+        totalSum
+      );
+
+      await Report.insertServiceBalances(reportId, services);
+    }
+
+    return res.status(200).json({
+      message: existing ? 'Report updated successfully' : 'Report created successfully',
       report_id: reportId,
       total_service: totalService,
-      total_sum: totalSum
+      total_sum: totalSum,
     });
 
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Something went wrong while creating report' });
+    res.status(500).json({ error: 'Something went wrong while saving the report' });
   }
 };
+
+
 
 
 exports.getDailyReport = async (req, res) => {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-export default function AdvanceForm({ reportDate, reportId }) {
+export default function AdvanceForm({ reportDate, reportId, triggerRefresh }) {
   const [entries, setEntries] = useState([{ name: "", amount: "" }]);
   const [message, setMessage] = useState("");
 
@@ -10,33 +10,42 @@ export default function AdvanceForm({ reportDate, reportId }) {
 
   console.log("rreportId", reportId);
   // 🔄 Fetch existing advance entries when reportId is available
-  useEffect(() => {
-    const fetchAdvanceEntries = async () => {
-      if (!reportId) return;
+useEffect(() => {
+  if (!reportId) {
+    setEntries([{ name: "", amount: "" }]);
+    setMessage("ℹ️ No advance data available for this date.");
+    return;
+  }
 
-      try {
-        const res = await axios.get(`http://localhost:5000/api/advance/${reportId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+  const fetchAdvanceEntries = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/advance/${reportId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        if (res.data.entries?.length > 0) {
-          const formatted = res.data.entries.map((e) => ({
-            name: e.name,
-            amount: parseFloat(e.amount),
-          }));
-          setEntries(formatted);
-          setMessage("ℹ️ Loaded previous advance entries.");
-        }
-      } catch (err) {
-        console.error("Failed to load advance entries:", err);
-        setMessage("❌ Failed to load previous data");
+      if (res.data.entries?.length > 0) {
+        const formatted = res.data.entries.map((e) => ({
+          name: e.name,
+          amount: parseFloat(e.amount),
+        }));
+        setEntries(formatted);
+        setMessage("ℹ️ Loaded previous advance entries.");
+      } else {
+        setEntries([{ name: "", amount: "" }]);
+        setMessage("ℹ️ No advance data found.");
       }
-    };
+    } catch (err) {
+      console.error("Failed to load advance entries:", err);
+      setEntries([{ name: "", amount: "" }]);
+      setMessage("❌ Failed to load previous data");
+    }
+  };
 
-    fetchAdvanceEntries();
-  }, [reportId]);
+  fetchAdvanceEntries();
+}, [reportId]);
+
 
   const handleChange = (index, field, value) => {
     const updated = [...entries];
@@ -73,6 +82,7 @@ export default function AdvanceForm({ reportDate, reportId }) {
       );
 
       setMessage("✅ Advance entries submitted successfully");
+      triggerRefresh();
     } catch (err) {
       console.error(err);
       setMessage("❌ Failed to submit advance entries");
@@ -91,7 +101,7 @@ export default function AdvanceForm({ reportDate, reportId }) {
               className="flex-1 border px-4 py-2 rounded-md"
               value={entry.name}
               onChange={(e) => handleChange(index, "name", e.target.value)}
-              required
+              
             />
             <input
               type="number"
@@ -99,7 +109,7 @@ export default function AdvanceForm({ reportDate, reportId }) {
               className="w-40 border px-4 py-2 rounded-md"
               value={entry.amount}
               onChange={(e) => handleChange(index, "amount", e.target.value)}
-              required
+              
             />
             {entries.length > 1 && (
               <button

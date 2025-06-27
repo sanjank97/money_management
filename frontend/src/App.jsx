@@ -3,6 +3,7 @@ import './App.css'
 import Login from './Pages/Login.jsx'
 import Dashboard from './Pages/Dashboard.jsx'
 import Report from './Pages/Report.Jsx'
+import Services from './Pages/Services.jsx'
 
 function App() {
 
@@ -11,7 +12,8 @@ function App() {
       <Routes>
          <Route path="/login" element={<Login />} />
          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/report" element={<Report />} />
+         <Route path="/report" element={<Report />} />
+         <Route path="/services" element={<Services />} />
       </Routes>  
     </>
   )

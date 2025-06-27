@@ -20,6 +20,22 @@ exports.createReport = async (userId, reportDate, advance, udhar, expense, total
   return result.insertId;
 };
 
+
+// Update daily report
+exports.updateReport = async (reportId, advance, udhar, expense, totalService, totalSum) => {
+  await db.query(
+    `UPDATE daily_reports 
+     SET advance = ?, 
+         udhar = ?, 
+         expense = ?, 
+         total_service = ?, 
+         total_sum = ? 
+     WHERE id = ?`,
+    [advance, udhar, expense, totalService, totalSum, reportId]
+  );
+};
+
+
 // Insert service balances
 exports.insertServiceBalances = async (reportId, services) => {
   for (const svc of services) {
@@ -31,6 +47,14 @@ exports.insertServiceBalances = async (reportId, services) => {
   }
 };
 
+
+// Delete existing service balances for a report
+exports.deleteServiceBalances = async (reportId) => {
+  await db.query(
+    `DELETE FROM service_balances WHERE report_id = ?`,
+    [reportId]
+  );
+};
 
 exports.findReportByUserAndDate = async (userId, date) => {
   const [rows] = await db.query(

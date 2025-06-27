@@ -8,6 +8,7 @@ export default function Report() {
   const today = new Date().toISOString().split("T")[0];
   const [reportDate, setReportDate] = useState(today);
   const [reportId, setReportId] = useState(null); // store when available
+  const [refreshKey, setRefreshKey] = useState(0);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -32,14 +33,14 @@ export default function Report() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column */}
         <div>
-          <ReportForm reportDate={reportDate} setReportId={setReportId} />
+          <ReportForm reportDate={reportDate} setReportId={setReportId}  refreshKey={refreshKey}/>
         </div>
 
         {/* Right Column */}
         <div className="space-y-6">
-          <AdvanceForm reportDate={reportDate} reportId={reportId} />
-          <UdharForm reportDate={reportDate} reportId={reportId} />
-          <ExpenseForm reportDate={reportDate} reportId={reportId} />
+          <AdvanceForm reportDate={reportDate} reportId={reportId}   triggerRefresh={() => setRefreshKey(prev => prev + 1)}/>
+          <UdharForm reportDate={reportDate} reportId={reportId}  triggerRefresh={() => setRefreshKey(prev => prev + 1)} />
+          <ExpenseForm reportDate={reportDate} reportId={reportId} triggerRefresh={() => setRefreshKey(prev => prev + 1)} />
         </div>
       </div>
     </div>
